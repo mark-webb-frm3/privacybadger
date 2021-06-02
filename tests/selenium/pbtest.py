@@ -393,6 +393,15 @@ class PBSeleniumTest(unittest.TestCase):
                     time.sleep(2 ** i)
                     continue
                 raise e
+            # work around geckodriver failures like
+            # https://travis-ci.com/github/EFForg/privacybadger/jobs/510508067
+            # https://travis-ci.com/github/EFForg/privacybadger/jobs/510531688
+            except NoSuchWindowException as e:
+                if str(e).startswith("Browsing context has been discarded") and i < retries - 1:
+                    self.driver.switch_to.default_content()
+                    time.sleep(2 ** i)
+                    continue
+                raise e
             # work around geckodriver/marionette/Firefox timeout handling,
             # for example: https://travis-ci.org/EFForg/privacybadger/jobs/389429089
             except WebDriverException as e:
