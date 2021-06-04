@@ -356,7 +356,15 @@ class PBSeleniumTest(unittest.TestCase):
 
                     break
 
-            except Exception:
+            except Exception as e:
+                # work around geckodriver failures like
+                # https://travis-ci.com/github/EFForg/privacybadger/jobs/510508067
+                # https://travis-ci.com/github/EFForg/privacybadger/jobs/510531688
+                if str(e).startswith("Browsing context has been discarded"):
+                    print("\nBROWSING CONTEXT DISCARDED RETRYING")
+                    i -= 1
+                    continue
+
                 if i == nretries - 1:
                     raise
 
@@ -390,15 +398,6 @@ class PBSeleniumTest(unittest.TestCase):
                 break
             except TimeoutException as e:
                 if i < retries - 1:
-                    time.sleep(2 ** i)
-                    continue
-                raise e
-            # work around geckodriver failures like
-            # https://travis-ci.com/github/EFForg/privacybadger/jobs/510508067
-            # https://travis-ci.com/github/EFForg/privacybadger/jobs/510531688
-            except NoSuchWindowException as e:
-                if str(e).startswith("Browsing context has been discarded") and i < retries - 1:
-                    self.driver.switch_to.default_content()
                     time.sleep(2 ** i)
                     continue
                 raise e
